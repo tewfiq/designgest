@@ -11,7 +11,7 @@ import { doc, setDoc, serverTimestamp } from "firebase/firestore";
 import { db, auth } from "../lib/firebase";
 import { GoogleGenAI } from "@google/genai";
 
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY || "" });
 
 enum OperationType {
   CREATE = 'create',
