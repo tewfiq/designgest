@@ -1,0 +1,51 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidDesign(data) {
+      return data.keys().hasAll(['url', 'markdown', 'createdAt']) &&
+             data.url is string && data.url.size() <= 2048 &&
+             data.markdown is string && data.markdown.size() <= 100000 &&
+             data.createdAt == request.time &&
+             (data.keys().hasAny(['userId']) ? (data.userId is string || data.userId == null) : true);
+    }
+
+    match /designs/{designId} {
+      allow get: if isValidId(designId);
+      allow list: if true;
+      allow create: if isValidId(designId) && 
+                      isValidDesign(incoming()) &&
+                      (incoming().keys().hasAny(['userId']) ? (incoming().userId == null || incoming().userId == request.auth.uid) : true);
+      
+      allow update: if isSignedIn() && 
+                      existing().userId == request.auth.uid &&
+                      isValidDesign(incoming()) &&
+                      incoming().userId == existing().userId &&
+                      incoming().url == existing().url &&
+                      incoming().createdAt == existing().createdAt;
+                      
+      allow delete: if isSignedIn() && 
+                      existing().userId == request.auth.uid;
+    }
+  }
+}

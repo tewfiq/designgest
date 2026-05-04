@@ -1,0 +1,22 @@
+{
+  "entities": {
+    "design": {
+      "title": "Design System Audit",
+      "description": "A generated DESIGN.md for a website",
+      "type": "object",
+      "properties": {
+        "url": { "type": "string", "description": "The URL of the website analyzed" },
+        "markdown": { "type": "string", "description": "The generated DESIGN.md content" },
+        "userId": { "type": "string", "description": "The UID of the user who generated it" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Generation timestamp" }
+      },
+      "required": ["url", "markdown", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/designs/{designId}": {
+      "schema": "design",
+      "description": "Collection of generated design systems"
+    }
+  }
+}

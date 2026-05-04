@@ -1,0 +1,6 @@
+{
+  "name": "DesignIngest",
+  "description": "Turn any website into an AI-readable design system (DESIGN.md). Analysis powered by Gemini and Hyperbrowser.",
+  "requestFramePermissions": [],
+  "majorCapabilities": []
+}
