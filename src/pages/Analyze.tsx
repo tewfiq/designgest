@@ -123,15 +123,31 @@ export function Analyze() {
           (Ensure the output is beautifully formatted in Markdown for a Notion-like experience).
         `;
 
-        const result = await ai.models.generateContent({
-          model: "gemini-3.1-pro-preview",
-          contents: [{
-            parts: [
-              { text: prompt },
-              { inlineData: { data: screenshotBase64, mimeType: mimeType } }
-            ]
-          }]
-        });
+        let result;
+        try {
+          result = await ai.models.generateContent({
+            model: "gemini-3.1-pro-preview",
+            contents: [{
+              parts: [
+                { text: prompt },
+                { inlineData: { data: screenshotBase64, mimeType: mimeType } }
+              ]
+            }]
+          });
+        } catch (proError: any) {
+          console.warn("Gemini 3.1 Pro failed, attempting fallback to 3.0 Flash...", proError);
+          addLog("Gemini 3.1 Pro saturé. Basculement sur Gemini 3.0 Flash...");
+          
+          result = await ai.models.generateContent({
+            model: "gemini-3.0-flash-preview",
+            contents: [{
+              parts: [
+                { text: prompt },
+                { inlineData: { data: screenshotBase64, mimeType: mimeType } }
+              ]
+            }]
+          });
+        }
 
         const designMarkdown = result.text;
         
@@ -218,7 +234,7 @@ export function Analyze() {
             </div>
             
             <h2 className="text-[40px] md:text-[56px] font-black tracking-tighter leading-none uppercase mb-4">Ingesting Interface</h2>
-            <p className="text-zinc-500 mb-12 font-medium tracking-tight">This typically takes 10-20 seconds...</p>
+            <p className="text-zinc-500 mb-12 font-medium tracking-tight">This typically takes 40-60 seconds...</p>
 
             <div className="w-full max-w-2xl bg-zinc-900 border border-zinc-800 rounded-3xl overflow-hidden font-mono text-[11px] shadow-2xl relative rotate-1">
               <div className="px-6 py-4 border-b border-zinc-800 flex items-center justify-between">
