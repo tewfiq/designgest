@@ -71,43 +71,59 @@ export function Analyze() {
         addLog("Hyperbrowser capture complete. Analyzing with Gemini 3 Flash...");
         
         const prompt = `
-          You are a senior design engineer and design system auditor.
-          Analyze the provided website screenshot and generate a serious, actionable DESIGN.md file.
-          The file must help an AI coding assistant recreate the visual logic of the website without copying protected content.
-          Focus on design principles, layout rules, visual tokens, interaction patterns, and implementation guidance.
-          Avoid vague adjectives. Be precise, structured, and useful.
+          You are a world-class Lead Product Designer and Design Systems Architect.
+          Your task is to analyze the provided screenshot and Website URL to generate an exhaustive, high-fidelity DESIGN.md file.
+          This file must serve as a "Source of Truth" for developers to perfectly replicate the aesthetic and UX of the site.
 
           WEBSITE URL: ${fullUrl}
 
-          Output format:
+          ### CRITICAL INSTRUCTIONS:
+          1. **Typography Identification**: Look closely at the text. Identify the primary and secondary typefaces. If the brand uses a custom font, identify its closest Google Font alternative. Specify font-family, fallback stacks, weights (e.g., 400, 700, 900), and specific treatments (tracking, leading).
+          2. **Color Extraction**: Identify the Core Brand Colors, Semantic Colors (Success, Error, Warning), and Neutral Tones (Grays/Backgrounds). Provide HEX or HSL values.
+          3. **Component Logic**: Break down the UI into atomic components (Buttons, Inputs, Cards, Navigation). Describe their states (hover, active, disabled).
+          4. **Design Tokens**: Output a valid JSON block of design tokens.
+          5. **Visual Direction**: Define the "vibe" (e.g., Swiss Brutalism, Minimalist SaaS, Playful B2C) and how it's achieved visually.
+
+          ### OUTPUT STRUCTURE (DESIGN.md):
           # DESIGN.md for [Site Name]
 
-          ## Brand Identity
-          ...
-          ## Visual Direction
-          ...
-          ## Colors (HEX codes, usage)
-          ...
-          ## Typography (Fonts, sizes, weights)
-          ...
-          ## Spacing & Layout
-          ...
-          ## Components (Key UI elements)
-          ...
-          ## Interactions & Animations
-          ...
-          ## Responsive Behavior
-          ...
-          ## Accessibility Notes
-          ...
-          ## Design Tokens (JSON)
+          ## 1. Foundations
+          ### Brand Identity & Mood
+          (Describe the visual character and market positioning)
+          ### Color Palette
+          (List colors with HEX codes and usage context)
+          ### Typography
+          (Identified fonts, scaling system, weights, and Google Font alternatives)
+
+          ## 2. Layout & Grid
+          ### Spacing System
+          (Padding/Margin scales, container widths)
+          ### Grid Logic
+          (Columns, breakpoints, and responsive behavior)
+
+          ## 3. UI Components
+          ### Navigation
+          ### Primary & Secondary Buttons
+          ### Input Fields & Controls
+          ### Cards & Containers
+
+          ## 4. Interaction Design
+          ### Micro-animations
+          ### State Transitions
+          ### Iconography Style
+
+          ## 5. Development Strategy
+          ### Design Tokens (JSON)
           \`\`\`json
-          { ... }
+          { "colors": {...}, "fonts": {...}, "spacing": {...} }
           \`\`\`
-          ## AI Generation Prompt (to recreate this look)
-          ...
-          ## Implementation Guidelines
-          ...
+          ### Implementation Guidelines
+          (Tailwind patterns, CSS strategies)
+
+          ## 6. AI Generation Meta-Prompt
+          (A prompt that can be used to recreate this exact look in another tool)
+
+          Be precise. No fluff. Use technical terminology.
         `;
 
         const result = await ai.models.generateContent({
