@@ -33,15 +33,12 @@ export function Home() {
 
         <form onSubmit={handleSubmit} className="w-full max-w-3xl relative group mb-12">
           <div className="relative flex items-center">
-            <div className="absolute left-8 lg:left-10 text-zinc-400 font-medium text-lg lg:text-xl hidden sm:block">
-              https://
-            </div>
             <input
               type="text"
-              placeholder="stripe.com"
+              placeholder="https://stripe.com"
               value={url}
               onChange={(e) => setUrl(e.target.value)}
-              className="w-full bg-zinc-100 border-2 border-transparent focus:border-black rounded-full py-8 sm:pl-32 pr-40 text-xl lg:text-2xl font-medium outline-none transition-all placeholder:text-zinc-300 shadow-sm"
+              className="w-full bg-zinc-100 border-2 border-transparent focus:border-black rounded-full py-8 px-10 pr-40 text-xl lg:text-2xl font-medium outline-none transition-all placeholder:text-zinc-300 shadow-sm"
             />
             <button
               type="submit"

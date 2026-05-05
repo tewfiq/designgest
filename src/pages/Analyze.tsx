@@ -2,10 +2,11 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { motion, AnimatePresence } from "motion/react";
-import { Loader2, CheckCircle2, AlertCircle, Terminal, Copy, Download, Share2, Save, ExternalLink } from "lucide-react";
+import { Loader2, CheckCircle2, AlertCircle, Terminal, Copy, Download, Share2, Save, ExternalLink, FileText } from "lucide-react";
 import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
-import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
+import { oneLight } from "react-syntax-highlighter/dist/esm/styles/prism";
 import confetti from "canvas-confetti";
 import { doc, setDoc, serverTimestamp } from "firebase/firestore";
 import { db, auth } from "../lib/firebase";
@@ -287,7 +288,7 @@ export function Analyze() {
             key="success"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="space-y-8"
+            className="space-y-12"
           >
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-zinc-100 pb-10">
               <div>
@@ -300,7 +301,7 @@ export function Analyze() {
               <div className="flex flex-wrap items-center gap-3">
                 <button 
                   onClick={copyToClipboard}
-                  className="flex items-center gap-2 px-6 py-3 bg-zinc-100 rounded-full text-[10px] font-black uppercase tracking-widest hover:bg-zinc-200 transition-colors"
+                  className="flex items-center gap-2 px-6 py-3 bg-zinc-100 rounded-full text-[10px] font-black uppercase tracking-widest hover:bg-zinc-200 transition-colors shadow-sm"
                 >
                   <Copy className="w-4 h-4" />
                   Copy
@@ -323,31 +324,72 @@ export function Analyze() {
               </div>
             </div>
 
-            <div className="prose prose-zinc prose-lg max-w-none bg-zinc-50 border border-zinc-100 rounded-[32px] p-8 md:p-12 shadow-sm overflow-x-hidden">
-               <ReactMarkdown
-                components={{
-                  code({ node, inline, className, children, ...props }: any) {
-                    const match = /language-(\w+)/.exec(className || "");
-                    return !inline && match ? (
-                      <SyntaxHighlighter
-                        style={vscDarkPlus}
-                        language={match[1]}
-                        PreTag="div"
-                        className="rounded-2xl !bg-zinc-900 !p-6 !my-8 shadow-xl"
-                        {...props}
-                      >
-                        {String(children).replace(/\n$/, "")}
-                      </SyntaxHighlighter>
-                    ) : (
-                      <code className="bg-zinc-200 px-1.5 py-0.5 rounded text-blue-600 font-bold" {...props}>
-                        {children}
-                      </code>
-                    );
-                  },
-                }}
-               >
-                {markdown}
-               </ReactMarkdown>
+            <div className="max-w-4xl mx-auto bg-white border border-zinc-100 rounded-[40px] shadow-2xl shadow-zinc-200/50 overflow-hidden">
+              {/* Document Header Decor */}
+              <div className="h-48 bg-zinc-50 relative overflow-hidden border-b border-zinc-100">
+                <div className="absolute inset-0 pattern-dots opacity-20" />
+                <div className="absolute bottom-10 left-12 flex items-center gap-4">
+                   <div className="w-16 h-16 bg-white rounded-2xl shadow-xl flex items-center justify-center border border-zinc-100">
+                     <FileText className="w-8 h-8 text-blue-600" />
+                   </div>
+                   <div>
+                     <h2 className="text-2xl font-black tracking-tight text-zinc-900 leading-none">Extraction result</h2>
+                     <p className="text-zinc-500 font-medium text-sm mt-1">Generated Design System & Metadata</p>
+                   </div>
+                </div>
+              </div>
+
+              <div className="px-12 py-20 prose prose-zinc prose-headings:font-black prose-headings:tracking-tight prose-headings:text-zinc-900 prose-h1:text-4xl prose-h2:text-2xl prose-h2:mt-16 prose-h3:text-xl prose-p:text-zinc-600 prose-p:leading-relaxed prose-li:text-zinc-600 prose-strong:text-zinc-900 prose-code:text-blue-600 prose-code:bg-zinc-100 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:font-bold prose-code:before:content-none prose-code:after:content-none max-w-none">
+                <ReactMarkdown
+                  remarkPlugins={[remarkGfm]}
+                  components={{
+                    code({ node, inline, className, children, ...props }: any) {
+                      const match = /language-(\w+)/.exec(className || "");
+                      return !inline && match ? (
+                        <div className="my-10 rounded-2xl overflow-hidden border border-zinc-100 shadow-sm">
+                          <SyntaxHighlighter
+                            style={oneLight}
+                            language={match[1]}
+                            PreTag="div"
+                            {...props}
+                            customStyle={{
+                              margin: 0,
+                              padding: "32px",
+                              fontSize: "0.9rem",
+                              lineHeight: "1.7",
+                              backgroundColor: "#fafafa",
+                            }}
+                          >
+                            {String(children).replace(/\n$/, "")}
+                          </SyntaxHighlighter>
+                        </div>
+                      ) : (
+                        <code className={className} {...props}>
+                          {children}
+                        </code>
+                      );
+                    },
+                    table({ children }) {
+                      return (
+                        <div className="my-10 overflow-x-auto border border-zinc-100 rounded-2xl shadow-sm">
+                          <table className="w-full text-left border-collapse table-auto">{children}</table>
+                        </div>
+                      );
+                    },
+                    thead({ children }) {
+                      return <thead className="bg-zinc-50/80 border-b border-zinc-100">{children}</thead>;
+                    },
+                    th({ children }) {
+                      return <th className="px-5 py-4 text-xs font-black uppercase tracking-widest text-zinc-400">{children}</th>;
+                    },
+                    td({ children }) {
+                      return <td className="px-5 py-4 text-sm text-zinc-600 border-t border-zinc-50">{children}</td>;
+                    },
+                  }}
+                >
+                  {markdown}
+                </ReactMarkdown>
+              </div>
             </div>
           </motion.div>
         )}
