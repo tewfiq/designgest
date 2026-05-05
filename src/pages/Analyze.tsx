@@ -69,7 +69,7 @@ export function Analyze() {
         const captureRes = await axios.post("/api/analyze", { url: fullUrl });
         const { screenshotBase64, mimeType, markdown: pageText, metadata: pageMeta } = captureRes.data;
         
-        addLog("Hyperbrowser capture complete. Performing Deep Audit with Gemini 1.5 Pro...");
+        addLog("Hyperbrowser capture complete. Performing Deep Audit with Gemini...");
         
         const prompt = `
           You are a world-class Lead Product Designer and Design Systems Architect.
@@ -124,7 +124,7 @@ export function Analyze() {
         `;
 
         const result = await ai.models.generateContent({
-          model: "gemini-1.5-pro",
+          model: "gemini-1.5-flash",
           contents: [{
             parts: [
               { text: prompt },
