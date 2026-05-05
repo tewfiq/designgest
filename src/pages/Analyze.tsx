@@ -135,11 +135,11 @@ export function Analyze() {
             }]
           });
         } catch (proError: any) {
-          console.warn("Gemini 3.1 Pro failed, attempting fallback to 3.0 Flash...", proError);
-          addLog("Gemini 3.1 Pro saturé. Basculement sur Gemini 3.0 Flash...");
+          console.warn("Gemini 3.1 Pro failed, attempting fallback to 3-Flash...", proError);
+          addLog("Gemini 3.1 Pro saturé. Basculement sur Gemini 3-Flash...");
           
           result = await ai.models.generateContent({
-            model: "gemini-3.0-flash-preview",
+            model: "gemini-3-flash-preview",
             contents: [{
               parts: [
                 { text: prompt },
