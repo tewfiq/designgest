@@ -19,6 +19,8 @@ export const handler: Handler = async (event) => {
 
     let screenshotBase64: string | null = null;
     let mimeType = "image/png";
+    let pageMarkdown = "";
+    let pageMetadata = null;
 
     // --- 1. ATTEMPT HYPERBROWSER ---
     if (hbApiKey) {
@@ -45,7 +47,7 @@ export const handler: Handler = async (event) => {
               const result = await hb.scrape.startAndWait({
                 url: targetUrl,
                 scrapeOptions: {
-                  formats: ["screenshot"],
+                  formats: ["screenshot", "markdown"],
                   screenshotOptions: { fullPage: true }
                 }
               });
@@ -72,6 +74,8 @@ export const handler: Handler = async (event) => {
 
         const res = await scrapeWithRetry(url);
         const screenshotValue = res.data.screenshot;
+        pageMarkdown = (res.data as any).markdown || "";
+        pageMetadata = (res.data as any).metadata || null;
 
         if (screenshotValue.startsWith("http")) {
           const imageRes = await axios.get(screenshotValue, { responseType: "arraybuffer" });
@@ -93,13 +97,15 @@ export const handler: Handler = async (event) => {
       try {
         const app = new FirecrawlApp({ apiKey: firecrawlApiKey });
         const scrapeResponse = await (app as any).scrapeUrl(url, {
-          formats: ["screenshot"]
+          formats: ["screenshot", "markdown"]
         });
 
         if (scrapeResponse.success && scrapeResponse.screenshot) {
           screenshotBase64 = scrapeResponse.screenshot.replace(/^data:image\/\w+;base64,/, "");
           const mimeMatch = scrapeResponse.screenshot.match(/^data:(image\/\w+);base64,/);
           if (mimeMatch) mimeType = mimeMatch[1];
+          pageMarkdown = scrapeResponse.markdown || "";
+          pageMetadata = scrapeResponse.metadata || null;
         } else {
           throw new Error(scrapeResponse.error || "Firecrawl capture failed");
         }
@@ -114,7 +120,12 @@ export const handler: Handler = async (event) => {
 
     return {
       statusCode: 200,
-      body: JSON.stringify({ screenshotBase64, mimeType }),
+      body: JSON.stringify({ 
+        screenshotBase64, 
+        mimeType,
+        markdown: pageMarkdown,
+        metadata: pageMetadata
+      }),
     };
   } catch (error: any) {
     console.error("Pipeline failed:", error.message);

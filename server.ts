@@ -27,6 +27,8 @@ async function startServer() {
       
       let screenshotBase64: string | null = null;
       let mimeType = "image/png";
+      let pageMarkdown = "";
+      let pageMetadata = null;
 
       // --- 1. ATTEMPT HYPERBROWSER ---
       if (hbApiKey) {
@@ -53,7 +55,7 @@ async function startServer() {
                 const result = await hb.scrape.startAndWait({
                   url: targetUrl,
                   scrapeOptions: {
-                    formats: ["screenshot"],
+                    formats: ["screenshot", "markdown"],
                     screenshotOptions: { fullPage: true }
                   }
                 });
@@ -81,6 +83,8 @@ async function startServer() {
 
           const hbResult = await scrapeWithRetry(url);
           const screenshotValue = hbResult.data.screenshot;
+          pageMarkdown = (hbResult.data as any).markdown || "";
+          pageMetadata = (hbResult.data as any).metadata || null;
 
           if (screenshotValue.startsWith("http")) {
             const imageRes = await axios.get(screenshotValue, { responseType: "arraybuffer" });
@@ -104,13 +108,17 @@ async function startServer() {
           console.log("[FIRECRAWL] Attempting fallback capture...");
           const fc = new FirecrawlApp({ apiKey: firecrawlApiKey });
           const scrapeResponse = await (fc as any).scrapeUrl(url, {
-            formats: ["screenshot"]
+            formats: ["screenshot", "markdown"]
           });
 
           if (scrapeResponse.success && scrapeResponse.screenshot) {
             screenshotBase64 = scrapeResponse.screenshot.replace(/^data:image\/\w+;base64,/, "");
             const mimeMatch = scrapeResponse.screenshot.match(/^data:(image\/\w+);base64,/);
             if (mimeMatch) mimeType = mimeMatch[1];
+            
+            pageMarkdown = scrapeResponse.markdown || "";
+            pageMetadata = scrapeResponse.metadata || null;
+            
             console.log("[FIRECRAWL] Capture success.");
           } else {
             throw new Error(scrapeResponse.error || "Firecrawl capture failed");
@@ -124,7 +132,12 @@ async function startServer() {
         throw new Error("Both capture pipelines failed. Please check your API keys and concurrency limits.");
       }
 
-      res.json({ screenshotBase64, mimeType });
+      res.json({ 
+        screenshotBase64, 
+        mimeType, 
+        markdown: pageMarkdown,
+        metadata: pageMetadata
+      });
     } catch (error: any) {
       console.error("[PIPELINE ERROR]:", error.message);
       res.status(500).json({ error: error.message });

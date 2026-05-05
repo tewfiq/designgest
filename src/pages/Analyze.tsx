@@ -67,40 +67,38 @@ export function Analyze() {
       try {
         addLog("Routing through Hyperbrowser instance...");
         const captureRes = await axios.post("/api/analyze", { url: fullUrl });
-        const { screenshotBase64, mimeType } = captureRes.data;
+        const { screenshotBase64, mimeType, markdown: pageText, metadata: pageMeta } = captureRes.data;
         
-        addLog("Hyperbrowser capture complete. Analyzing with Gemini 3 Flash...");
+        addLog("Hyperbrowser capture complete. Performing Deep Audit with Gemini 1.5 Pro...");
         
         const prompt = `
           You are a world-class Lead Product Designer and Design Systems Architect.
-          Your task is to analyze the provided screenshot and Website URL to generate an exhaustive, high-fidelity DESIGN.md file.
-          This file must serve as a "Source of Truth" for developers to perfectly replicate the aesthetic and UX of the site.
+          Your task is to analyze the provided screenshot AND the extracted page metadata (for technical clues like font families and CSS classes) to generate an exhaustive, high-fidelity DESIGN.md file.
 
           WEBSITE URL: ${fullUrl}
+          
+          ### TECHNICAL CONTEXT (Extracted from DOM):
+          ${pageText ? `PAGE TEXT/MARKDOWN:\n${pageText.slice(0, 10000)}` : "No page markdown available."}
+          ${pageMeta ? `METADATA:\n${JSON.stringify(pageMeta)}` : ""}
 
           ### CRITICAL INSTRUCTIONS:
-          1. **Typography Identification**: Look closely at the text. Identify the primary and secondary typefaces. If the brand uses a custom font, identify its closest Google Font alternative. Specify font-family, fallback stacks, weights (e.g., 400, 700, 900), and specific treatments (tracking, leading).
-          2. **Color Extraction**: Identify the Core Brand Colors, Semantic Colors (Success, Error, Warning), and Neutral Tones (Grays/Backgrounds). Provide HEX or HSL values.
-          3. **Component Logic**: Break down the UI into atomic components (Buttons, Inputs, Cards, Navigation). Describe their states (hover, active, disabled).
+          1. **Typography Source of Truth**: DO NOT GUESS if technical clues are available. Look at the CSS class names or content in the Page Markdown to identify exact font names (e.g., Montserrat vs Inter). If the brand uses a specific font, document it exactly. Specify font-family, weights, and treatments.
+          2. **Color Precision**: Identify the exact Brand Colors. Cross-reference the visual with common branding patterns found in the metadata/text. Provide HEX values.
+          3. **Component Logic**: Break down the UI into atomic components (Buttons, Inputs, Cards, Navigation).
           4. **Design Tokens**: Output a valid JSON block of design tokens.
-          5. **Visual Direction**: Define the "vibe" (e.g., Swiss Brutalism, Minimalist SaaS, Playful B2C) and how it's achieved visually.
+          5. **Visual Direction**: Define the "vibe" and how it's achieved visually.
 
           ### OUTPUT STRUCTURE (DESIGN.md):
           # DESIGN.md for [Site Name]
 
           ## 1. Foundations
           ### Brand Identity & Mood
-          (Describe the visual character and market positioning)
           ### Color Palette
-          (List colors with HEX codes and usage context)
-          ### Typography
-          (Identified fonts, scaling system, weights, and Google Font alternatives)
+          ### Typography (Explicit identification)
 
           ## 2. Layout & Grid
           ### Spacing System
-          (Padding/Margin scales, container widths)
           ### Grid Logic
-          (Columns, breakpoints, and responsive behavior)
 
           ## 3. UI Components
           ### Navigation
@@ -119,22 +117,20 @@ export function Analyze() {
           { "colors": {...}, "fonts": {...}, "spacing": {...} }
           \`\`\`
           ### Implementation Guidelines
-          (Tailwind patterns, CSS strategies)
 
           ## 6. AI Generation Meta-Prompt
-          (A prompt that can be used to recreate this exact look in another tool)
 
-          Be precise. No fluff. Use technical terminology.
+          (Ensure the output is beautifully formatted in Markdown for a Notion-like experience).
         `;
 
         const result = await ai.models.generateContent({
-          model: "gemini-3-flash-preview",
-          contents: {
+          model: "gemini-1.5-pro",
+          contents: [{
             parts: [
               { text: prompt },
               { inlineData: { data: screenshotBase64, mimeType: mimeType } }
             ]
-          }
+          }]
         });
 
         const designMarkdown = result.text;
